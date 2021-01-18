@@ -1,0 +1,19 @@
+{
+  "name": "cakedefi-tokensale",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "author": "andrew",
+  "license": "ISC",
+  "dependencies": {
+    "bignumber.js": "^9.0.1",
+    "coingecko-api": "^1.0.10"
+  },
+  "devDependencies": {
+    "jest": "^26.6.3"
+  }
+}
