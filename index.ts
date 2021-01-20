@@ -1,16 +1,26 @@
+import * as readline from "readline";
 import { BigNumber } from "bignumber.js";
-const readline = require("readline");
+import { getCurrentPrice } from "./api/api";
 
 export interface CryptoPrice {
-  [currency: string]: BigNumber.Instance
-}
+  [currency: string]: BigNumber.Instance,
+};
+
+const CURRENT_PRICE = "CURRENT";
 
 export const processData = (currencyRate: CryptoPrice) => {
   let currencyList: string[] = [];
+
   // set round up to Round-down the result
   BigNumber.set({ ROUNDING_MODE: BigNumber.ROUND_DOWN });
 
-  return (line: string) => {
+  return async (line: string) => {
+    // check first line for "CURRENT"
+    if(line == CURRENT_PRICE) {
+      currencyRate = await getCurrentPrice.getPriceFromGecko();
+      return currencyRate;
+    };
+
     if (Object.keys(currencyRate).length === 0) {
       currencyList = line.split(" ");
       currencyRate = {
@@ -18,7 +28,7 @@ export const processData = (currencyRate: CryptoPrice) => {
         ETH: new BigNumber(currencyList[1]),
         DOGE: new BigNumber(currencyList[2]),
       };
-      return;
+      return currencyRate;
     }
 
     const lineValues = line.split(' ');
@@ -27,23 +37,28 @@ export const processData = (currencyRate: CryptoPrice) => {
     const decimalPlaces = parseInt(lineValues[1]);
     const purchaseCurrency = lineValues[2];
 
-    const result = saleRate
+    const result: string = saleRate
       .multipliedBy(purchaseAmount)
       .multipliedBy(currencyRate[purchaseCurrency])
       .dividedBy(currencyRate.ETH)
       .toFixed(decimalPlaces);
-    console.log(result);
     
     return result;
   };
 }; 
 
 const currencyRateList: CryptoPrice = {};
-const readAndOutputDetails = processData(currencyRateList);
 
-const rl = readline.createInterface({
-  input: process.stdin,
-});
+async function processLineInTxt() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+  });
 
-rl.on('line', readAndOutputDetails);
+  const readAndOutputDetails = processData(currencyRateList);
 
+  for await (const line of rl){
+    console.log(await readAndOutputDetails(line));
+  }
+};
+
+processLineInTxt();
